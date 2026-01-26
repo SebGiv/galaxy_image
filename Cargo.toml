@@ -1,0 +1,19 @@
+[package]
+name = "galaxy_image"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["SebGiv"]
+description = "Image loading and saving library for Galaxy3D engine with PNG, BMP, and JPEG support"
+repository = "https://github.com/SebGiv/galaxy_image"
+keywords = ["image", "graphics", "png", "bmp", "jpeg"]
+categories = ["multimedia::images"]
+
+[dependencies]
+png = "0.17"
+bmp = "0.5"
+jpeg-decoder = "0.3"
+jpeg-encoder = "0.6"
+
+[dev-dependencies]
+# For testing
