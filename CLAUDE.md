@@ -1,236 +1,190 @@
-# galaxy_image - Context Documentation
+# GalaxyImage - Règles de Développement
 
-## Project Overview
+> **Project**: Image loading and saving library for the Galaxy3D engine
+> **Date**: 2026-01-30
 
-**galaxy_image** is an image loading and saving library developed for the Galaxy3D game engine. It provides a simple, type-safe API for working with image files in multiple formats.
+---
 
-## Development Context
+## 📋 Règles de Communication
 
-### Initial Requirements (from user)
+### Langue de Communication
 
-1. **Architecture**: Manager/Factory/Singleton pattern with a struct named `GalaxyImage`
-2. **Functionality**:
-   - Load images from files or byte buffers
-   - Save images to files or byte buffers
-   - Support PNG, BMP, and JPEG formats initially
-3. **Design Principles**:
-   - Separate .rs files for each object type
-   - Image struct encapsulating pixel buffer with metadata
-   - Advanced format detection via magic bytes (not just file extensions)
-   - Optimized serialization/deserialization
-4. **Dependencies**: Use low-level crates as backends (wrapper approach)
-5. **Licensing**: Include all dependency licenses in LICENSES/ folder
+**TOUJOURS parler en français** avec l'utilisateur dans toutes les conversations.
 
-### Technology Stack
+**Exception** : Le code source, les commentaires dans le code, et les logs doivent être **en anglais**.
 
-#### Core Dependencies
+---
 
-- **png** (0.17) - MIT/Apache-2.0
-  - Low-level PNG encoding/decoding
-  - Supports U8 and U16 bit depths
-  - Handles RGB, RGBA, Grayscale, and GrayscaleAlpha
+## 📁 Organisation des Fichiers
 
-- **bmp** (0.5) - MIT
-  - Low-level BMP encoding/decoding
-  - Simple format, supports RGB only
-  - U8 component type
+### Fichiers de Documentation
 
-- **jpeg-decoder** (0.3) - MIT/Apache-2.0
-  - Low-level JPEG decoding
-  - Supports RGB and Grayscale
-  - U8 component type
+- **`CLAUDE.md`** (ce fichier) : Contient UNIQUEMENT les règles de développement du projet
+- **`README.md`** : Documentation utilisateur de la bibliothèque
+  - **Mise à jour automatique** : Claude doit mettre à jour ce fichier après chaque modification de l'API publique
+  - **Langue** : Anglais
+- **`Cargo.toml`** : Manifeste du projet avec les dépendances et métadonnées
 
-- **jpeg-encoder** (0.6) - MIT/Apache-2.0
-  - Low-level JPEG encoding
-  - Configurable quality (1-100)
-  - Supports RGB and Grayscale
+---
 
-### Architecture Decisions
+## 🔧 Règles de Développement
 
-#### 1. Manager/Factory Pattern
+### 1. Avant Tout Développement (Codage, Résolution de Bug, etc.)
 
-The `GalaxyImage` struct acts as a singleton-like factory with static methods:
-- `load_from_file()` - Load from file path with auto-detection
-- `load_from_bytes()` - Load from byte buffer with explicit format
-- `load_from_bytes_auto()` - Load from byte buffer with auto-detection
-- `save_to_file()` - Save to file
-- `save_to_bytes()` - Save to byte buffer
+**RÈGLE IMPÉRATIVE** :
 
-**Rationale**: Provides a clean, centralized API without requiring instantiation.
+1. ✋ **Exposer clairement** ce qui va être fait (changements prévus, fichiers impactés, approche technique)
+2. ⏸️ **Attendre le feu vert** de l'utilisateur avant de commencer
+3. ✅ Si l'utilisateur répond **"dev"** ou **"vas-y"** → Commencer le développement
+4. ❌ Si l'utilisateur demande des modifications → Ajuster l'approche et re-exposer
 
-#### 2. Type-Safe Pixel Formats
-
-**PixelFormat enum**:
-- `R` (Grayscale)
-- `RG` (Grayscale + Alpha)
-- `RGB` (Red, Green, Blue)
-- `RGBA` (Red, Green, Blue, Alpha)
-- `BGR` (Blue, Green, Red - BMP native)
-- `BGRA` (Blue, Green, Red, Alpha)
-
-**ComponentType enum**:
-- `U8` - 8-bit unsigned (0-255)
-- `U16` - 16-bit unsigned (0-65535)
-- `F32` - 32-bit float (0.0-1.0)
-
-**Rationale**: Explicit typing prevents format confusion and enables compile-time validation.
-
-#### 3. Magic Byte Detection
-
-**ImageFormat enum** with `detect_from_bytes()`:
-- PNG: `0x89 0x50 0x4E 0x47 0x0D 0x0A 0x1A 0x0A`
-- BMP: `0x42 0x4D` (ASCII "BM")
-- JPEG: `0xFF 0xD8` (SOI marker)
-
-**Rationale**: More reliable than file extension checking, enables correct handling of renamed or extension-less files.
-
-#### 4. Automatic Format Conversion
-
-The library automatically converts between pixel formats when needed:
-- BGR ↔ RGB conversion for BMP files
-- Alpha channel stripping for formats that don't support it
-- Grayscale to RGB conversion when needed
-
-**Rationale**: Simplifies user code by handling format compatibility internally.
-
-#### 5. Separate Loader Modules
-
-Each format has its own loader module:
-- `loaders/png_loader.rs` - PNG implementation
-- `loaders/bmp_loader.rs` - BMP implementation
-- `loaders/jpeg_loader.rs` - JPEG implementation
-
-**Rationale**: Clean separation of concerns, easy to add new formats, easier testing.
-
-### File Structure
-
+**Exemple** :
 ```
-galaxy_image/
-├── Cargo.toml              # Package configuration
-├── LICENSE-MIT             # MIT license for this library
-├── CLAUDE.md               # This file (context documentation)
-├── README.md               # English usage documentation
-├── README_FR.md            # French usage documentation
-├── LICENSES/               # Dependency licenses
-│   ├── png-LICENSE-MIT.txt
-│   ├── png-LICENSE-APACHE.txt
-│   ├── bmp-LICENSE-MIT.txt
-│   ├── jpeg-decoder-LICENSE-MIT.txt
-│   ├── jpeg-decoder-LICENSE-APACHE.txt
-│   ├── jpeg-encoder-LICENSE-MIT.txt
-│   └── jpeg-encoder-LICENSE-APACHE.txt
-└── src/
-    ├── lib.rs              # Library root and exports
-    ├── error.rs            # Error types
-    ├── component_type.rs   # ComponentType enum
-    ├── pixel_format.rs     # PixelFormat enum
-    ├── image_format.rs     # ImageFormat enum with magic byte detection
-    ├── image.rs            # Image struct (pixel data container)
-    ├── galaxy_image.rs     # GalaxyImage manager/factory
-    └── loaders/
-        ├── mod.rs          # Loader module exports
-        ├── png_loader.rs   # PNG implementation
-        ├── bmp_loader.rs   # BMP implementation
-        └── jpeg_loader.rs  # JPEG implementation
+Claude: "Je vais ajouter le support du format WebP en créant :
+- src/loaders/webp_loader.rs : Nouveau loader pour WebP
+- src/loaders/mod.rs : Exporter le nouveau loader
+- src/image_format.rs : Ajouter ImageFormat::Webp
+- src/galaxy_image.rs : Détecter les magic bytes WebP
+Approche : Utiliser la crate 'image' pour le décodage WebP
+Est-ce que je peux commencer le développement ?"
+
+User: "dev"  ← Feu vert
+
+Claude: [commence le développement]
 ```
 
-### Design Patterns
+---
 
-#### 1. Factory Pattern (GalaxyImage)
-Central point for creating Image instances from various sources.
+### 2. Avant Tout Commit/Push
 
-#### 2. Builder Pattern (Image)
-Image struct provides multiple construction methods for different scenarios.
+**RÈGLE IMPÉRATIVE** :
 
-#### 3. Strategy Pattern (Loaders)
-Each format has its own loading/saving strategy, selected based on ImageFormat enum.
+1. ✋ **Exposer le message de commit** complet (titre + description)
+2. ⏸️ **Attendre le feu vert** de l'utilisateur
+3. ✅ Si l'utilisateur répond **"commit"** → Faire `git commit` SEULEMENT
+4. ✅ Si l'utilisateur répond **"commit/push"** ou **"push"** → Faire `git commit` ET `git push`
+5. ❌ Si l'utilisateur demande des modifications → Ajuster le message et re-exposer
 
-#### 4. Error Handling
-Custom `ImageError` enum with conversions from underlying crate errors.
+**Langue des Messages de Commit** : **Anglais** uniquement
 
-### Format Support Matrix
+- Les titres de commit doivent être en anglais
+- Les descriptions de commit doivent être en anglais
+- Suivre les conventions Git standard (feat:, fix:, docs:, refactor:, etc.)
 
-| Format | Read | Write | Bit Depths | Alpha | Notes |
-|--------|------|-------|------------|-------|-------|
-| PNG    | ✅   | ✅    | U8, U16    | ✅    | Full support |
-| BMP    | ✅   | ✅    | U8         | ❌    | RGB only |
-| JPEG   | ✅   | ✅    | U8         | ❌    | Lossy compression, quality control |
+**Exemple** :
+```
+Claude: "Je propose le message de commit suivant :
 
-### Known Limitations
+Titre: feat: Add WebP format support
 
-1. **BMP**: No alpha channel support (RGBA stripped to RGB on save)
-2. **JPEG**: No alpha channel support (RGBA stripped to RGB on save)
-3. **JPEG**: Lossy compression (not suitable for lossless workflows)
-4. **Indexed color**: Not supported (PNG indexed color rejected)
-5. **CMYK**: Not supported (JPEG CMYK rejected)
+Description:
+- Add WebP loader using 'image' crate
+- Detect WebP magic bytes (RIFF + WEBP)
+- Update README.md with WebP format documentation
+- Add example for loading WebP images
 
-### Future Enhancements (Potential)
+Est-ce que je peux commit/push ?"
 
-1. **Additional formats**: WebP, TIFF, TGA, DDS
-2. **GPU texture formats**: BC1-BC7 compression
-3. **HDR formats**: EXR, Radiance HDR
-4. **Mipmap generation**: Automatic mipmap chain generation
-5. **Resize/transform**: Basic image manipulation operations
-6. **Pixel data access**: Iterator-based pixel access for processing
-7. **SIMD optimization**: Vectorized format conversions
+User: "commit"  ← Commit seulement (pas de push)
 
-### Integration with Galaxy3D
+Claude: [fait git commit seulement]
+```
 
-This library is designed to integrate with the Galaxy3D engine's texture system:
+---
 
+### 3. Code Source et Logs
+
+**Langue** : **Anglais** uniquement
+
+**Commentaires dans le code** :
 ```rust
-// Load texture from file
-let image = GalaxyImage::load_from_file("texture.png")?;
+// ✅ CORRECT (English)
+/// Loads an image from a file path with automatic format detection
+pub fn load_from_file<P: AsRef<Path>>(path: P) -> ImageResult<Image> {
+    // Detect format from magic bytes
+    let format = detect_format(&data)?;
+    // ...
+}
 
-// Create GPU texture from image
-let texture = renderer.create_texture(TextureDesc {
-    width: image.width(),
-    height: image.height(),
-    format: Format::R8G8B8A8_SRGB,
-    data: Some(image.data()),
-    ..Default::default()
-})?;
+// ❌ INCORRECT (Français)
+/// Charge une image depuis un fichier avec détection automatique du format
+pub fn load_from_file<P: AsRef<Path>>(path: P) -> ImageResult<Image> {
+    // Détecter le format depuis les magic bytes
+    let format = detect_format(&data)?;
+    // ...
+}
 ```
 
-### Commercial Use
+**Logs** :
+```rust
+// ✅ CORRECT (English)
+log::info!("Loaded {}x{} image from {:?}", width, height, path);
+log::error!("Failed to decode PNG image: {}", err);
 
-All dependencies use MIT and/or Apache-2.0 licenses, which are:
-- ✅ Commercial-friendly
-- ✅ No royalties or fees
-- ✅ No copyleft requirements
-- ✅ Modification allowed
-- ✅ Distribution allowed
+// ❌ INCORRECT (Français)
+log::info!("Image chargée {}x{} depuis {:?}", width, height, path);
+log::error!("Échec du décodage de l'image PNG: {}", err);
+```
 
-Only requirement: Include license notices (already done in LICENSES/ folder).
+---
 
-### Testing Strategy
+## 🎯 Workflow de Développement
 
-1. **Unit tests**: Test each loader independently
-2. **Round-trip tests**: Load → Save → Load, verify data integrity
-3. **Format detection tests**: Verify magic byte detection
-4. **Conversion tests**: Test BGR↔RGB, alpha stripping, etc.
-5. **Error handling tests**: Invalid data, unsupported formats, etc.
+### Workflow Type pour une Nouvelle Feature
 
-### Performance Considerations
+1. **Analyse et Planification**
+   - Discuter de la feature avec l'utilisateur
+   - Identifier les fichiers à modifier
 
-1. **Zero-copy where possible**: Data passed as Vec<u8> ownership
-2. **Lazy conversion**: Format conversions only when needed
-3. **Streaming I/O**: Decoders use streaming interfaces
-4. **Memory allocation**: Pre-sized allocations to avoid reallocations
+2. **Proposition de Développement**
+   - Exposer les changements prévus
+   - Attendre le feu vert ("dev")
 
-### Maintenance Notes
+3. **Développement**
+   - Coder la feature (code + commentaires en anglais)
+   - Ajouter des tests si nécessaire
 
-- Keep dependency versions up to date (check quarterly)
-- Monitor for security advisories on image parsing crates
-- Test with real-world image files from various sources
-- Update licenses when dependencies are updated
+4. **Documentation**
+   - Mettre à jour `README.md` si l'API publique change
+   - Mettre à jour les exemples si nécessaire
 
-## Version History
+5. **Commit**
+   - Exposer le message de commit
+   - Attendre le feu vert ("commit" ou "commit/push")
+   - Commit/push selon l'instruction
 
-- **0.1.0** (2026-01-26): Initial implementation
-  - PNG support (read/write, U8/U16)
-  - BMP support (read/write, U8 only)
-  - JPEG support (read/write, U8 only, quality control)
-  - Magic byte format detection
-  - Automatic format conversion
-  - Manager/Factory pattern API
+---
+
+## 📖 Référence Rapide
+
+| Situation | Action Claude | Attente User |
+|-----------|---------------|--------------|
+| Avant dev | Exposer les changements prévus | "dev" / "vas-y" |
+| Avant commit | Exposer le message de commit | "commit" / "commit/push" |
+| Code source | Écrire en anglais (commentaires + logs) | - |
+| Conversation | Parler en français | - |
+| Mise à jour doc | Automatique après modification API | - |
+
+---
+
+## ✅ Checklist Avant Chaque Action
+
+### Avant de Coder
+- [ ] J'ai exposé clairement ce que je vais faire
+- [ ] J'ai attendu le feu vert de l'utilisateur
+- [ ] Je vais écrire le code et les commentaires en anglais
+
+### Avant de Commit
+- [ ] J'ai exposé le message de commit complet
+- [ ] J'ai attendu l'instruction ("commit" ou "commit/push")
+- [ ] Je vais suivre l'instruction exactement
+
+### Après Développement
+- [ ] J'ai mis à jour `README.md` si l'API publique a changé
+- [ ] Les logs sont en anglais
+- [ ] Les commentaires sont en anglais
+- [ ] Les tests passent (si applicable)
+
+---
+
+**Note** : Ces règles sont **impératives** et doivent être suivies à chaque fois, sans exception.
