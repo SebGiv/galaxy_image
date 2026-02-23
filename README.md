@@ -1,10 +1,11 @@
 # galaxy_image
 
-Image loading and saving library for the Galaxy3D engine with support for PNG, BMP, and JPEG formats.
+Image loading and saving library for the Galaxy3D engine with support for PNG, BMP, JPEG, and EXR (HDR) formats.
 
 ## Features
 
-- **Multiple formats**: PNG, BMP, JPEG with automatic format detection
+- **Multiple formats**: PNG, BMP, JPEG, EXR (HDR) with automatic format detection
+- **HDR support**: OpenEXR format with F16/F32 floating-point precision
 - **Magic byte detection**: Robust format detection from file content, not just extensions
 - **Type-safe**: Strongly typed pixel formats and component types
 - **Simple API**: Clean manager/factory pattern with `GalaxyImage`
@@ -93,6 +94,7 @@ GalaxyImage::save_to_file(&image, "generated.png", ImageFormat::Png)?;
 | PNG    | ✅   | ✅    | U8, U16    | ✅           | Lossless, full support |
 | BMP    | ✅   | ✅    | U8         | ❌           | RGB only, alpha stripped |
 | JPEG   | ✅   | ✅    | U8         | ❌           | Lossy, quality control |
+| EXR    | ✅   | ✅    | F16, F32   | ✅           | HDR, lossless ZIP compression |
 
 ## Pixel Formats
 
@@ -107,7 +109,8 @@ GalaxyImage::save_to_file(&image, "generated.png", ImageFormat::Png)?;
 
 - `ComponentType::U8` - 8-bit unsigned integer (0-255)
 - `ComponentType::U16` - 16-bit unsigned integer (0-65535)
-- `ComponentType::F32` - 32-bit floating point (0.0-1.0)
+- `ComponentType::F16` - 16-bit half-precision floating point (HDR)
+- `ComponentType::F32` - 32-bit floating point (HDR)
 
 ## Format Detection
 
@@ -123,6 +126,7 @@ match format {
     ImageFormat::Png => println!("It's a PNG!"),
     ImageFormat::Bmp => println!("It's a BMP!"),
     ImageFormat::Jpeg => println!("It's a JPEG!"),
+    ImageFormat::Exr => println!("It's an EXR!"),
     ImageFormat::Unknown => println!("Unknown format"),
 }
 ```
@@ -131,6 +135,7 @@ Magic bytes recognized:
 - **PNG**: `89 50 4E 47 0D 0A 1A 0A` (`\x89PNG\r\n\x1A\n`)
 - **BMP**: `42 4D` (`BM`)
 - **JPEG**: `FF D8` (SOI marker)
+- **EXR**: `76 2F 31 01`
 
 ## Error Handling
 
@@ -187,12 +192,60 @@ let texture = renderer.create_texture(TextureDesc {
 })?;
 ```
 
+## EXR (OpenEXR) Support
+
+The EXR format is the industry standard for HDR images in 3D rendering and VFX.
+
+### Loading EXR
+
+```rust
+use galaxy_image::GalaxyImage;
+
+let image = GalaxyImage::load_from_file("normal_map.exr")?;
+// Typical result: F16 or F32 component type, RGB or RGBA pixel format
+println!("{}x{} {:?} {:?}", image.width(), image.height(),
+    image.pixel_format(), image.component_type());
+```
+
+### Creating and Saving EXR
+
+```rust
+use galaxy_image::{GalaxyImage, Image, PixelFormat, ComponentType, ImageFormat};
+
+// Create an HDR image with F32 precision
+let mut image = Image::new(1024, 1024, PixelFormat::RGB, ComponentType::F32);
+
+// HDR values can exceed 1.0
+let data = image.data_mut();
+let r: f32 = 2.5; // HDR value
+data[0..4].copy_from_slice(&r.to_le_bytes());
+
+// Save as EXR (ZIP lossless compression)
+GalaxyImage::save_to_file(&image, "output.exr", ImageFormat::Exr)?;
+```
+
+### Supported EXR Compression
+
+| Compression | Supported | Type     |
+|-------------|-----------|----------|
+| None        | ✅        | -        |
+| RLE         | ✅        | Lossless |
+| ZIP / ZIPS  | ✅        | Lossless |
+| PIZ         | ✅        | Lossless |
+| PXR24       | ✅        | Lossy    |
+| B44 / B44A  | ✅        | Lossy    |
+| DWAA / DWAB | ❌        | Lossy    |
+
+> **Note**: DWAA/DWAB compression is not yet supported by the underlying `exr` crate.
+> If your EXR files use DWAA, re-export them with ZIP or PIZ compression from your 3D tool.
+
 ## Performance Tips
 
 1. **Use the right format**:
    - PNG for lossless images with transparency
    - JPEG for photos (set quality based on needs)
    - BMP for simple, uncompressed images
+   - EXR for HDR textures and PBR maps (normal, roughness, metalness)
 
 2. **Batch operations**:
    ```rust
@@ -216,6 +269,7 @@ All dependencies use commercial-friendly licenses (MIT and/or Apache-2.0):
 - `bmp` - MIT
 - `jpeg-decoder` - MIT/Apache-2.0
 - `jpeg-encoder` - MIT/Apache-2.0
+- `exr` - BSD-3-Clause
 
 Full license texts are available in the `LICENSES/` directory.
 
@@ -224,6 +278,14 @@ Full license texts are available in the `LICENSES/` directory.
 This library is part of the Galaxy3D engine project. For bug reports or feature requests, please contact the maintainer.
 
 ## Changelog
+
+### 0.2.0 (2026-02-23)
+
+- **EXR support**: OpenEXR format read/write with F16 and F32 precision
+- **F16 component type**: Half-precision floating point for HDR textures
+- Supported EXR compressions: None, RLE, ZIP, PIZ, PXR24, B44/B44A
+- Automatic channel detection (R/G/B/A/Y)
+- Mixed sample type handling (auto-conversion to F32)
 
 ### 0.1.0 (2026-01-26)
 

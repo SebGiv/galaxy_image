@@ -7,6 +7,9 @@ pub enum ComponentType {
     /// Unsigned 16-bit integer (0-65535)
     U16,
 
+    /// 16-bit half-precision floating point
+    F16,
+
     /// 32-bit floating point (0.0-1.0)
     F32,
 }
@@ -17,6 +20,7 @@ impl ComponentType {
         match self {
             ComponentType::U8 => 1,
             ComponentType::U16 => 2,
+            ComponentType::F16 => 2,
             ComponentType::F32 => 4,
         }
     }

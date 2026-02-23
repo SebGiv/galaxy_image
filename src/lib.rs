@@ -2,11 +2,11 @@
 //!
 //! Image loading and saving library for the Galaxy3D engine.
 //!
-//! Supports PNG, BMP, and JPEG formats with automatic format detection.
+//! Supports PNG, BMP, JPEG, and EXR (HDR) formats with automatic format detection.
 //!
 //! ## Features
 //!
-//! - **Multiple formats**: PNG, BMP, JPEG
+//! - **Multiple formats**: PNG, BMP, JPEG, EXR (HDR)
 //! - **Automatic detection**: Magic byte recognition for format detection
 //! - **Simple API**: Manager/Factory pattern with `GalaxyImage`
 //! - **Flexible pixel formats**: RGB, RGBA, BGR, BGRA, Grayscale

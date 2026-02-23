@@ -10,6 +10,9 @@ pub enum ImageFormat {
     /// JPEG format
     Jpeg,
 
+    /// OpenEXR format (HDR)
+    Exr,
+
     /// Unknown or unsupported format
     Unknown,
 }
@@ -36,6 +39,11 @@ impl ImageFormat {
             return ImageFormat::Jpeg;
         }
 
+        // EXR: 0x76 0x2F 0x31 0x01
+        if data.len() >= 4 && data[0..4] == [0x76, 0x2F, 0x31, 0x01] {
+            return ImageFormat::Exr;
+        }
+
         ImageFormat::Unknown
     }
 
@@ -49,6 +57,8 @@ impl ImageFormat {
             ImageFormat::Bmp
         } else if path_lower.ends_with(".jpg") || path_lower.ends_with(".jpeg") {
             ImageFormat::Jpeg
+        } else if path_lower.ends_with(".exr") {
+            ImageFormat::Exr
         } else {
             ImageFormat::Unknown
         }
@@ -60,6 +70,7 @@ impl ImageFormat {
             ImageFormat::Png => "png",
             ImageFormat::Bmp => "bmp",
             ImageFormat::Jpeg => "jpg",
+            ImageFormat::Exr => "exr",
             ImageFormat::Unknown => "",
         }
     }

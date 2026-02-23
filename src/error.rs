@@ -22,6 +22,9 @@ pub enum ImageError {
     /// JPEG encoding error (string message)
     JpegEncodeError(String),
 
+    /// EXR error (decoding or encoding)
+    ExrError(exr::error::Error),
+
     /// Unsupported image format
     UnsupportedFormat(String),
 
@@ -47,6 +50,7 @@ impl fmt::Display for ImageError {
             ImageError::BmpError(e) => write!(f, "BMP error: {:?}", e),
             ImageError::JpegDecodeError(e) => write!(f, "JPEG decode error: {:?}", e),
             ImageError::JpegEncodeError(msg) => write!(f, "JPEG encode error: {}", msg),
+            ImageError::ExrError(e) => write!(f, "EXR error: {}", e),
             ImageError::UnsupportedFormat(fmt) => write!(f, "Unsupported format: {}", fmt),
             ImageError::InvalidPixelFormat(fmt) => write!(f, "Invalid pixel format: {}", fmt),
             ImageError::InvalidDimensions { width, height } => {
@@ -87,6 +91,12 @@ impl From<bmp::BmpError> for ImageError {
 impl From<jpeg_decoder::Error> for ImageError {
     fn from(error: jpeg_decoder::Error) -> Self {
         ImageError::JpegDecodeError(error)
+    }
+}
+
+impl From<exr::error::Error> for ImageError {
+    fn from(error: exr::error::Error) -> Self {
+        ImageError::ExrError(error)
     }
 }
 

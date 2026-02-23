@@ -1,5 +1,5 @@
 use crate::{Image, ImageError, ImageFormat, ImageResult};
-use crate::loaders::{load_png, save_png, load_bmp, save_bmp, load_jpeg, save_jpeg};
+use crate::loaders::{load_png, save_png, load_bmp, save_bmp, load_jpeg, save_jpeg, load_exr, save_exr};
 use std::fs;
 use std::path::Path;
 
@@ -65,6 +65,7 @@ impl GalaxyImage {
             ImageFormat::Png => load_png(bytes),
             ImageFormat::Bmp => load_bmp(bytes),
             ImageFormat::Jpeg => load_jpeg(bytes),
+            ImageFormat::Exr => load_exr(bytes),
             ImageFormat::Unknown => {
                 Err(ImageError::UnsupportedFormat("Unknown format".to_string()))
             }
@@ -174,6 +175,7 @@ impl GalaxyImage {
             ImageFormat::Png => save_png(image),
             ImageFormat::Bmp => save_bmp(image),
             ImageFormat::Jpeg => save_jpeg(image, jpeg_quality.clamp(1, 100)),
+            ImageFormat::Exr => save_exr(image),
             ImageFormat::Unknown => {
                 Err(ImageError::UnsupportedFormat("Unknown format".to_string()))
             }
